@@ -41,6 +41,52 @@ Projeto front-end simples que simula um dispositivo IoT (edge) para uma **Smart 
 
 6. Controle os atuadores (Ventilador / Iluminação) usando os switches — as mudanças são gravadas no nó `devices/<deviceId>/actuators` no Firebase.
 
+## 🔁 Estrutura esperada no Firebase
+
+```json
+{
+  "devices": {
+    "device_001": {
+      "name": "Sala de Estar",
+      "location": "Casa",
+      "status": "offline",
+      "lastUpdate": 0,
+      "sensors": {
+        "temperature": {
+          "value": 22,
+          "unit": "°C",
+          "timestamp": 0
+        },
+        "humidity": {
+          "value": 60,
+          "unit": "%",
+          "timestamp": 0
+        },
+        "light": {
+          "value": 400,
+          "unit": "lux",
+          "timestamp": 0
+        }
+      },
+      "actuators": {
+        "fan": {
+          "state": false,
+          "mode": "manual"
+        },
+        "light": {
+          "state": false,
+          "mode": "manual"
+        }
+      },
+      "settings": {
+        "tempThreshold": 26,
+        "lightThreshold": 300,
+        "autoMode": true
+      }
+    }
+  }
+}
+```
 > Observação: Para testes rápidos, ajuste as regras do Realtime Database para permitir leitura/escrita (não recomendado em produção). Exemplo mínimo de regra para testes:
 >
 > {
