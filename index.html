@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simulador IoT - Edge Computing</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .header {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .header h1 {
+        color: #667eea;
+        margin-bottom: 10px;
+      }
+
+      .status-badge {
+        display: inline-block;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: bold;
+      }
+
+      .status-online {
+        background: #10b981;
+        color: white;
+      }
+      .status-offline {
+        background: #ef4444;
+        color: white;
+      }
+
+      .config-section {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .config-section h2 {
+        color: #667eea;
+        margin-bottom: 15px;
+        font-size: 18px;
+      }
+
+      .config-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-bottom: 15px;
+      }
+
+      .input-group {
+        display: flex;
+        flex-direction: column;
+      }
+      .input-group label {
+        margin-bottom: 5px;
+        font-weight: 500;
+        color: #4b5563;
+      }
+      .input-group input,
+      .input-group select {
+        padding: 10px;
+        border: 2px solid #e5e7eb;
+        border-radius: 5px;
+        font-size: 14px;
+        background: white;
+      }
+
+      .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 5px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .btn-primary {
+        background: #667eea;
+        color: white;
+      }
+      .btn-primary:hover {
+        background: #5568d3;
+      }
+
+      .btn-danger {
+        background: #ef4444;
+        color: white;
+      }
+      .btn-danger:hover {
+        background: #dc2626;
+      }
+
+      .btn-secondary {
+        background: #111827;
+        color: white;
+      }
+      .btn-secondary:hover {
+        filter: brightness(1.1);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+      }
+
+      .card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .card h3 {
+        color: #667eea;
+        margin-bottom: 15px;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .sensor-reading {
+        font-size: 36px;
+        font-weight: bold;
+        color: #1f2937;
+        margin: 10px 0;
+      }
+
+      .sensor-unit {
+        font-size: 18px;
+        color: #6b7280;
+      }
+
+      .actuator-control {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+      }
+
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: 0.4s;
+        border-radius: 34px;
+      }
+
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: 0.4s;
+        border-radius: 50%;
+      }
+
+      input:checked + .slider {
+        background-color: #10b981;
+      }
+      input:checked + .slider:before {
+        transform: translateX(26px);
+      }
+
+      .mode-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: bold;
+        background: #ddd6fe;
+        color: #5b21b6;
+      }
+
+      .log-section {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        max-height: 300px;
+        overflow-y: auto;
+      }
+
+      .log-entry {
+        padding: 8px;
+        margin-bottom: 5px;
+        border-left: 3px solid #667eea;
+        background: #f9fafb;
+        font-size: 13px;
+        font-family: monospace;
+      }
+
+      .icon {
+        width: 24px;
+        height: 24px;
+      }
+
+      .small-muted {
+        color: #6b7280;
+        font-size: 13px;
+      }
+
+      .divider {
+        height: 1px;
+        background: #e5e7eb;
+        margin: 15px 0;
+      }
+
+      .manual-controls {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-top: 10px;
+      }
+
+      @media (max-width: 700px) {
+        .config-row {
+          grid-template-columns: 1fr;
+        }
+        .manual-controls {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🔌 Simulador IoT - Smart Home</h1>
+        <span class="status-badge status-offline" id="connectionStatus"
+          >Desconectado</span
+        >
+      </div>
+
+      <div class="config-section">
+        <h2>⚙️ Configuração do Firebase</h2>
+        <div class="config-row">
+          <div class="input-group">
+            <label>Firebase URL</label>
+            <input
+              type="text"
+              id="firebaseUrl"
+              placeholder="https://seu-projeto.firebaseio.com"
+            />
+          </div>
+          <div class="input-group">
+            <label>Device ID</label>
+            <input type="text" id="deviceId" value="device_001" />
+          </div>
+        </div>
+
+        <div class="config-row">
+          <div class="input-group">
+            <label>Modo dos Sensores (Temp/Umid/Lux)</label>
+            <select id="sensorModeSelect" onchange="setSensorMode(this.value)">
+              <option value="auto" selected>
+                Automático (aleatório a cada 3s)
+              </option>
+              <option value="manual">Manual (você escolhe)</option>
+              <option value="read">Apenas leitura (lê do Firebase)</option>
+            </select>
+            <small class="small-muted"
+              >Auto/Manual enviam sensores. “Apenas leitura” só lê do Firebase.</small
+            >
+          </div>
+
+          <div class="input-group">
+            <label>Intervalo Automático (ms)</label>
+            <input
+              type="number"
+              id="autoIntervalMs"
+              value="3000"
+              min="500"
+              step="100"
+            />
+            <small class="small-muted"
+              >Aplicado quando modo está em Automático.</small
+            >
+          </div>
+        </div>
+
+        <div class="config-row">
+          <button class="btn btn-primary" onclick="connectFirebase()">
+            Conectar ao Firebase
+          </button>
+          <button class="btn btn-danger" onclick="disconnectFirebase()">
+            Desconectar
+          </button>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <h3>
+            <svg
+              class="icon"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              ></path>
+            </svg>
+            Sensor de Temperatura (DHT22)
+            <span class="mode-badge" id="tempModeBadge">AUTO</span>
+          </h3>
+          <div class="sensor-reading">
+            <span id="tempValue">--</span><span class="sensor-unit">°C</span>
+          </div>
+          <small class="small-muted">Faixa: 0-50°C</small>
+        </div>
+
+        <div class="card">
+          <h3>
+            <svg
+              class="icon"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"
+              ></path>
+            </svg>
+            Sensor de Umidade (DHT22)
+            <span class="mode-badge" id="humModeBadge">AUTO</span>
+          </h3>
+          <div class="sensor-reading">
+            <span id="humValue">--</span><span class="sensor-unit">%</span>
+          </div>
+          <small class="small-muted">Faixa: 0-100%</small>
+        </div>
+
+        <div class="card">
+          <h3>
+            <svg
+              class="icon"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+              ></path>
+            </svg>
+            Sensor de Luminosidade (LDR)
+            <span class="mode-badge" id="lightModeBadge">AUTO</span>
+          </h3>
+          <div class="sensor-reading">
+            <span id="lightValue">--</span><span class="sensor-unit">lux</span>
+          </div>
+          <small class="small-muted">Faixa: 0-1023 lux</small>
+        </div>
+      </div>
+
+      <!-- CONTROLES MANUAIS DOS SENSORES -->
+      <div
+        class="config-section"
+        id="manualSensorsSection"
+        style="display: none"
+      >
+        <h2>🖐️ Controles Manuais dos Sensores</h2>
+        <div class="manual-controls">
+          <div class="input-group">
+            <label>Temperatura (°C)</label>
+            <input
+              type="number"
+              id="manualTemp"
+              value="22"
+              min="0"
+              max="50"
+              step="0.1"
+            />
+          </div>
+          <div class="input-group">
+            <label>Umidade (%)</label>
+            <input
+              type="number"
+              id="manualHum"
+              value="60"
+              min="0"
+              max="100"
+              step="1"
+            />
+          </div>
+          <div class="input-group">
+            <label>Luminosidade (lux)</label>
+            <input
+              type="number"
+              id="manualLight"
+              value="400"
+              min="0"
+              max="1023"
+              step="1"
+            />
+          </div>
+          <div class="input-group" style="justify-content: flex-end">
+            <label>&nbsp;</label>
+            <button class="btn btn-secondary" onclick="pushManualSensors()">
+              Enviar valores manuais
+            </button>
+            <small class="small-muted" style="margin-top: 6px"
+              >Envia para UI + Firebase (se conectado).</small
+            >
+          </div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <h3>
+            <svg
+              class="icon"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+              ></path>
+            </svg>
+            Ventilador
+            <span class="mode-badge" id="fanMode">MANUAL</span>
+          </h3>
+          <div class="actuator-control">
+            <span>Estado:</span>
+            <label class="switch">
+              <input
+                type="checkbox"
+                id="fanSwitch"
+                onchange="toggleActuator('fan', this.checked)"
+              />
+              <span class="slider"></span>
+            </label>
+          </div>
+          <small class="small-muted">Controlado via Relay Module</small>
+        </div>
+
+        <div class="card">
+          <h3>
+            <svg
+              class="icon"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+              ></path>
+            </svg>
+            Iluminação
+            <span class="mode-badge" id="lightMode">MANUAL</span>
+          </h3>
+          <div class="actuator-control">
+            <span>Estado:</span>
+            <label class="switch">
+              <input
+                type="checkbox"
+                id="lightSwitch"
+                onchange="toggleActuator('light', this.checked)"
+              />
+              <span class="slider"></span>
+            </label>
+          </div>
+          <small class="small-muted">Controlado via Relay Module</small>
+        </div>
+      </div>
+
+      <div class="log-section">
+        <h3 style="color: #667eea; margin-bottom: 10px">📋 Log de Eventos</h3>
+        <div id="logContainer"></div>
+      </div>
+    </div>
+
+    <script type="module">
+      let firebaseUrl = "";
+      let deviceId = "device_001";
+      let isConnected = false;
+
+      // ====== SENSOR MODE (AUTO / MANUAL / READ) ======
+      let sensorMode = "auto"; // 'auto' | 'manual' | 'read'
+      let sensorInterval = null; // timer do AUTO
+      let sensorReadInterval = null; // timer do READ (polling)
+
+      function stopAllSensorTimers() {
+        if (sensorInterval) {
+          clearInterval(sensorInterval);
+          sensorInterval = null;
+        }
+        if (sensorReadInterval) {
+          clearInterval(sensorReadInterval);
+          sensorReadInterval = null;
+        }
+      }
+
+      function setSensorBadges(modeText) {
+        document.getElementById("tempModeBadge").textContent = modeText;
+        document.getElementById("humModeBadge").textContent = modeText;
+        document.getElementById("lightModeBadge").textContent = modeText;
+      }
+
+      async function persistSensorModeToFirebase() {
+        if (!isConnected) return;
+        await sendToFirebase(`devices/${deviceId}/sensorMode`, sensorMode);
+      }
+
+      window.setSensorMode = function (mode) {
+        sensorMode = mode === "manual" ? "manual" : mode === "read" ? "read" : "auto";
+
+        // UI sections
+        document.getElementById("manualSensorsSection").style.display =
+          sensorMode === "manual" ? "block" : "none";
+
+        // Interval input (Apenas no modo AUTO)
+        const autoIntervalInput = document.getElementById("autoIntervalMs");
+        autoIntervalInput.disabled = sensorMode !== "auto";
+
+        // Atualiza badges
+        const badgeText = sensorMode === "read" ? "READ" : sensorMode.toUpperCase();
+        setSensorBadges(badgeText);
+
+        addLog(`🧭 Modo dos sensores alterado para: ${badgeText}`);
+
+        // Para timers anteriores
+        stopAllSensorTimers();
+
+        // Se não conectado ainda, só atualiza UI
+        if (!isConnected) return;
+
+        // Salva modo no Firebase
+        persistSensorModeToFirebase();
+
+        // Inicia conforme modo
+        if (sensorMode === "auto") {
+          restartSensorSimulation();
+        } else if (sensorMode === "read") {
+          startSensorReadLoop();
+        }
+      };
+
+      function restartSensorSimulation() {
+        stopAllSensorTimers();
+        if (!isConnected) return;
+        if (sensorMode !== "auto") return;
+
+        const ms =
+          parseInt(document.getElementById("autoIntervalMs").value, 10) || 3000;
+        const safeMs = Math.max(500, ms);
+
+        sensorInterval = setInterval(() => {
+          if (!isConnected) return;
+          if (sensorMode !== "auto") return;
+
+          const temp = (20 + Math.random() * 15).toFixed(1);
+          const hum = (40 + Math.random() * 40).toFixed(0);
+          const light = Math.floor(Math.random() * 1000);
+
+          applySensorValues({
+            temperature: parseFloat(temp),
+            humidity: parseInt(hum, 10),
+            light: light,
+            source: "auto",
+          });
+        }, safeMs);
+
+        addLog(`⏱️ Simulação automática ligada (${safeMs}ms)`);
+      }
+
+      function startSensorReadLoop() {
+        stopAllSensorTimers();
+        if (!isConnected) return;
+        if (sensorMode !== "read") return;
+
+        const pollMs = 1500;
+
+        sensorReadInterval = setInterval(async () => {
+          if (!isConnected) return;
+          if (sensorMode !== "read") return;
+
+          const sensors = await getFromFirebase(`devices/${deviceId}/sensors`);
+          if (!sensors) return;
+
+          const t = sensors.temperature?.value;
+          const h = sensors.humidity?.value;
+          const l = sensors.light?.value;
+
+          if (typeof t === "number") {
+            document.getElementById("tempValue").textContent = t.toFixed(1);
+          }
+          if (typeof h === "number") {
+            document.getElementById("humValue").textContent = String(h);
+          }
+          if (typeof l === "number") {
+            document.getElementById("lightValue").textContent = String(l);
+          }
+        }, pollMs);
+
+        addLog(`👀 Leitura de sensores do Firebase ativa (${pollMs}ms)`);
+      }
+
+      // Envia os valores manuais
+      window.pushManualSensors = function () {
+        if (sensorMode !== "manual") {
+          addLog("⚠️ Controles manuais só funcionam no modo MANUAL.");
+          return;
+        }
+
+        const t = parseFloat(document.getElementById("manualTemp").value);
+        const h = parseInt(document.getElementById("manualHum").value, 10);
+        const l = parseInt(document.getElementById("manualLight").value, 10);
+
+        const temp = Number.isFinite(t) ? Math.min(50, Math.max(0, t)) : 22;
+        const hum = Number.isFinite(h) ? Math.min(100, Math.max(0, h)) : 60;
+        const light = Number.isFinite(l) ? Math.min(1023, Math.max(0, l)) : 400;
+
+        // Atualiza inputs com clamps
+        document.getElementById("manualTemp").value = temp;
+        document.getElementById("manualHum").value = hum;
+        document.getElementById("manualLight").value = light;
+
+        applySensorValues({
+          temperature: temp,
+          humidity: hum,
+          light: light,
+          source: "manual",
+        });
+      };
+
+      async function applySensorValues({
+        temperature,
+        humidity,
+        light,
+        source,
+      }) {
+        document.getElementById("tempValue").textContent =
+          temperature.toFixed(1);
+        document.getElementById("humValue").textContent = String(humidity);
+        document.getElementById("lightValue").textContent = String(light);
+
+        if (sensorMode === "read") {
+          addLog("👀 READ: sensores atualizados apenas na UI (sem envio).");
+          return;
+        }
+
+        if (!isConnected) return;
+
+        const sensorData = {
+          temperature: {
+            value: temperature,
+            unit: "°C",
+            timestamp: Date.now(),
+          },
+          humidity: { value: humidity, unit: "%", timestamp: Date.now() },
+          light: { value: light, unit: "lux", timestamp: Date.now() },
+        };
+
+        await sendToFirebase(`devices/${deviceId}/sensors`, sensorData);
+        await sendToFirebase(`devices/${deviceId}/lastUpdate`, Date.now());
+
+        addLog(
+          `📡 Sensores enviados (${source.toUpperCase()}): T=${temperature.toFixed(
+            1
+          )}°C | H=${humidity}% | L=${light}lux`
+        );
+        // Verifica modo automático dos atuadores
+        checkAutoMode(temperature, light);
+      }
+
+      // ====== FIREBASE / APP ======
+      window.connectFirebase = function () {
+        firebaseUrl = document.getElementById("firebaseUrl").value.trim();
+        deviceId = document.getElementById("deviceId").value.trim();
+
+        if (!firebaseUrl) {
+          alert("Por favor, insira a URL do Firebase");
+          return;
+        }
+
+        isConnected = true;
+        updateConnectionStatus(true);
+        addLog("✅ Conectado ao Firebase");
+
+        initializeDevice();
+
+        // inicia conforme modo selecionado
+        const selectMode = document.getElementById("sensorModeSelect").value;
+        setSensorMode(selectMode);
+
+        listenToActuators();
+      };
+
+      window.disconnectFirebase = function () {
+        isConnected = false;
+        updateConnectionStatus(false);
+        addLog("❌ Desconectado do Firebase");
+
+        stopAllSensorTimers();
+      };
+
+      function updateConnectionStatus(connected) {
+        const badge = document.getElementById("connectionStatus");
+        if (connected) {
+          badge.textContent = "Conectado";
+          badge.className = "status-badge status-online";
+        } else {
+          badge.textContent = "Desconectado";
+          badge.className = "status-badge status-offline";
+        }
+      }
+
+      async function initializeDevice() {
+        const deviceData = {
+          name: "Sala de Estar",
+          location: "Casa",
+          status: "online",
+          lastUpdate: Date.now(),
+          sensors: {
+            temperature: { value: 22, unit: "°C", timestamp: Date.now() },
+            humidity: { value: 60, unit: "%", timestamp: Date.now() },
+            light: { value: 400, unit: "lux", timestamp: Date.now() },
+          },
+          actuators: {
+            fan: { state: false, mode: "manual" },
+            light: { state: false, mode: "manual" },
+          },
+          settings: {
+            tempThreshold: 26,
+            lightThreshold: 300,
+            autoMode: true,
+          },
+          sensorMode: sensorMode,
+        };
+
+        await sendToFirebase(`devices/${deviceId}`, deviceData);
+        addLog("🚀 Dispositivo inicializado");
+      }
+
+      async function checkAutoMode(temp, light) {
+        // segurança extra (não escreve nada se sensorMode estiver READ)
+        if (sensorMode === "read") return;
+
+        const settings = await getFromFirebase(`devices/${deviceId}/settings`);
+        const actuators = await getFromFirebase(
+          `devices/${deviceId}/actuators`
+        );
+
+        if (!settings || !actuators) return;
+
+        if (actuators.fan?.mode === "auto") {
+          const shouldTurnOn = temp > settings.tempThreshold;
+          if (shouldTurnOn !== actuators.fan.state) {
+            await sendToFirebase(
+              `devices/${deviceId}/actuators/fan/state`,
+              shouldTurnOn
+            );
+            addLog(
+              `🌡️ Ventilador ${
+                shouldTurnOn ? "ligado" : "desligado"
+              } automaticamente (Temp: ${temp.toFixed(1)}°C)`
+            );
+          }
+        }
+
+        if (actuators.light?.mode === "auto") {
+          const shouldTurnOn = light < settings.lightThreshold;
+          if (shouldTurnOn !== actuators.light.state) {
+            await sendToFirebase(
+              `devices/${deviceId}/actuators/light/state`,
+              shouldTurnOn
+            );
+            addLog(
+              `💡 Luz ${
+                shouldTurnOn ? "ligada" : "desligada"
+              } automaticamente (Luz: ${light}lux)`
+            );
+          }
+        }
+      }
+
+      function listenToActuators() {
+        setInterval(async () => {
+          if (!isConnected) return;
+
+          const actuators = await getFromFirebase(
+            `devices/${deviceId}/actuators`
+          );
+          if (actuators) {
+            document.getElementById("fanSwitch").checked =
+              !!actuators.fan?.state;
+            document.getElementById("lightSwitch").checked =
+              !!actuators.light?.state;
+            document.getElementById("fanMode").textContent = (
+              actuators.fan?.mode || "manual"
+            ).toUpperCase();
+            document.getElementById("lightMode").textContent = (
+              actuators.light?.mode || "manual"
+            ).toUpperCase();
+          }
+        }, 2000);
+      }
+
+      window.toggleActuator = async function (actuator, state) {
+        if (!isConnected) {
+          alert("Conecte ao Firebase primeiro");
+          return;
+        }
+
+        await sendToFirebase(
+          `devices/${deviceId}/actuators/${actuator}/state`,
+          state
+        );
+        await sendToFirebase(
+          `devices/${deviceId}/actuators/${actuator}/mode`,
+          "manual"
+        );
+        addLog(
+          `🔄 ${actuator === "fan" ? "Ventilador" : "Luz"} ${
+            state ? "ligado" : "desligado"
+          } manualmente`
+        );
+      };
+
+      async function sendToFirebase(path, data) {
+        if (!firebaseUrl || !isConnected) return;
+
+        try {
+          const url = `${firebaseUrl}/${path}.json`;
+          await fetch(url, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+          });
+        } catch (error) {
+          console.error("Erro ao enviar para Firebase:", error);
+        }
+      }
+
+      async function getFromFirebase(path) {
+        if (!firebaseUrl || !isConnected) return null;
+
+        try {
+          const url = `${firebaseUrl}/${path}.json`;
+          const response = await fetch(url);
+          return await response.json();
+        } catch (error) {
+          console.error("Erro ao ler do Firebase:", error);
+          return null;
+        }
+      }
+
+      function addLog(message) {
+        const logContainer = document.getElementById("logContainer");
+        const timestamp = new Date().toLocaleTimeString("pt-BR");
+        const logEntry = document.createElement("div");
+        logEntry.className = "log-entry";
+        logEntry.textContent = `[${timestamp}] ${message}`;
+        logContainer.insertBefore(logEntry, logContainer.firstChild);
+
+        while (logContainer.children.length > 20) {
+          logContainer.removeChild(logContainer.lastChild);
+        }
+      }
+    </script>
+  </body>
+</html>
